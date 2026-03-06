@@ -115,8 +115,13 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-display font-bold text-2xl shadow-lg shadow-primary/30 overflow-hidden">
-                <img src="/logo.png" alt="Axara Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+                <img 
+                  src="/logo.png" 
+                  alt="Axara Logo" 
+                  className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer" 
+                />
               </div>
               <span className="font-display font-bold text-2xl tracking-tight text-primary">AXARA</span>
             </div>
@@ -183,42 +188,103 @@ export default function LandingPage() {
 
             <motion.div 
               initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
-              className="relative h-[400px] flex items-center justify-center"
+              animate={{ opacity: 1, scale: 1, y: [0, -20, 0] }} // Float lebih tinggi biar terasa hidup
+              transition={{ duration: 0.6, y: { duration: 4, repeat: Infinity, ease: "easeInOut" } }}
+              className="relative h-[500px] flex items-center justify-center" // Container ditinggikan
             >
-              {/* Glow Effect */}
-              <div className="absolute inset-0 bg-white/30 blur-[100px] rounded-full transform scale-125 z-0"></div>
+              {/* Glow Effect Utama */}
+              <div className="absolute w-[450px] h-[450px] bg-primary/40 blur-[120px] rounded-full z-0 opacity-70 animate-pulse"></div>
               
-              {/* Mascot Placeholder */}
-              <div className="relative z-10 w-72 h-80 bg-white rounded-[3rem] border-4 border-white/50 shadow-2xl flex items-center justify-center transform rotate-3 overflow-visible">
-                {/* Welcome Bubble */}
-                <div className="absolute -top-12 -right-8 bg-white px-6 py-3 rounded-2xl rounded-bl-none shadow-xl border-2 border-cream-dark z-30 animate-bounce">
-                  <p className="font-display font-bold text-primary text-lg whitespace-nowrap">Selamat datang! 👋</p>
+              {/* Glow */}
+              <div className="absolute w-[300px] h-[300px] bg-[#D4AF37]/30 blur-[80px] rounded-full z-0"></div>
+
+              {/* Maskot Container */}
+              <div className="relative z-10 w-[400px] h-[480px] flex items-center justify-center overflow-visible">
+    
+              {/* Welcome Bubble */}
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                animate={{ 
+                  opacity: 1, 
+                  scale: 1, 
+                  y: [0, -10, 0] 
+                }}
+                transition={{ 
+                  duration: 0.5,
+                  y: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+                }}
+                /* Nilai top bubble */
+                className="absolute top-4 -right-16 z-40 drop-shadow-2xl" 
+              >
+                <div className="relative flex items-center justify-center">
+                  <svg 
+                    width="220" 
+                    height="80" 
+                    viewBox="0 0 220 80" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path 
+                      d="M30 10C15 10 5 20 5 35C5 50 15 60 30 60H40L35 75C45 70 55 60 60 60H190C205 60 215 50 215 35C215 20 205 10 190 10H30Z" 
+                      fill="white" 
+                      stroke="#E2E8F0" 
+                      strokeWidth="1"
+                    />
+                  </svg>
+                  
+                  <div className="absolute inset-0 flex items-center justify-center pb-4 pr-2">
+                    <span className="text-primary font-bold text-lg tracking-tight">
+                      Selamat Datang! ✨
+                    </span>
+                  </div>
                 </div>
-                <img src="/mascot.png" alt="Axara Explorer" className="w-full h-full object-cover rounded-[2.5rem]" referrerPolicy="no-referrer" />
-              </div>
-            </motion.div>
+              </motion.div>
+
+            {/* Gambar Maskot */}
+            <img 
+              src="/mascot.png" 
+              alt="Axara Explorer" 
+              className="w-full h-full object-contain drop-shadow-2xl" 
+              referrerPolicy="no-referrer" 
+            />
+          </div>
+        </motion.div>
           </div>
         </div>
 
-        {/* Bottom Strip for Floating Icons */}
-        <div className="w-full bg-white/10 py-6 border-t border-white/20 overflow-hidden relative mt-auto">
-          <div className="flex justify-between items-center gap-4 px-4 w-full overflow-x-auto no-scrollbar">
-            {floatingIcons.map((item, i) => (
-              <motion.div
-                key={i}
-                whileHover={{ scale: 1.2, y: -5 }}
-                className="flex flex-col items-center gap-2 group cursor-pointer shrink-0"
-              >
-                <div className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center text-3xl border-2 border-white/50">
-                  {item.icon}
+        {/* Bottom Strip*/}
+        <div className="w-full bg-white/10 border-t border-white/20 overflow-hidden py-4">
+          <div className="relative flex">
+            {/* Animasi Bergerak Terus Menerus */}
+            <motion.div 
+              className="flex flex-nowrap gap-12 items-center"
+              animate={{
+                x: [0, -1000], 
+              }}
+              transition={{
+                x: {
+                  repeat: Infinity,
+                  repeatType: "loop",
+                  duration: 30, 
+                  ease: "linear",
+                },
+              }}
+            >
+              {/* Kita Render dua kali agar loopingnya tidak putus (seamless) */}
+              {[...floatingIcons, ...floatingIcons, ...floatingIcons].map((item, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center gap-2 shrink-0 select-none group cursor-pointer"
+                >
+                  <div className="w-12 h-12 md:w-14 md:h-14 bg-white rounded-full shadow-lg flex items-center justify-center text-2xl md:text-3xl border border-white/50 transition-transform duration-300 group-hover:scale-110">
+                    {item.icon}
+                  </div>
+                  <span className="text-white text-[9px] font-bold uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
+                    {item.label}
+                  </span>
                 </div>
-                <span className="text-white/90 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap absolute -bottom-6">
-                  {item.label}
-                </span>
-              </motion.div>
-            ))}
+              ))}
+            </motion.div>
           </div>
         </div>
       </section>
@@ -393,11 +459,16 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-16 mb-16">
             <div>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-display font-bold text-2xl overflow-hidden">
-                  <img src="/logo.png" alt="Axara Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              <div className="flex items-center gap-2">
+                <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+                  <img 
+                    src="/logo.png" 
+                    alt="Axara Logo" 
+                    className="w-full h-full object-contain" 
+                    referrerPolicy="no-referrer" 
+                  />
                 </div>
-                <span className="font-display font-bold text-3xl tracking-tight text-primary">AXARA</span>
+                <span className="font-display font-bold text-2xl tracking-tight text-primary">AXARA</span>
               </div>
               <p className="text-text font-medium mb-8 max-w-md leading-relaxed">
                 Melestarikan Budaya Melalui Eksplorasi. Bergabunglah bersama kami dalam membuat sejarah dan tradisi Indonesia dapat diakses dan menyenangkan bagi semua orang.

@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import { useAppStore } from '../store/useAppStore';
-import { Award, Star, MapPin, Shield, Edit2, Check } from 'lucide-react';
-import { motion } from 'motion/react';
+import { Award, Star, MapPin, Shield, Edit2, Check, User, UserPlus } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 const AVATARS = [
-  { id: 'boy1', emoji: '👦🏻', gender: 'male' },
-  { id: 'boy2', emoji: '👦🏽', gender: 'male' },
-  { id: 'girl1', emoji: '👧🏻', gender: 'female' },
-  { id: 'girl2', emoji: '👧🏽', gender: 'female' },
-  { id: 'neutral', emoji: '🤠', gender: 'neutral' },
+  { id: 'b1', url: '/avatars/boy1.jpg', gender: 'male' },
+  { id: 'b2', url: '/avatars/boy2.jpg', gender: 'male' },
+  { id: 'b3', url: '/avatars/boy3.jpg', gender: 'male' },
+  { id: 'b4', url: '/avatars/boy4.jpg', gender: 'male' },
+  { id: 'b5', url: '/avatars/boy5.jpg', gender: 'male' },
+  { id: 'g1', url: '/avatars/girl1.jpg', gender: 'female' },
+  { id: 'g2', url: '/avatars/girl2.jpg', gender: 'female' },
+  { id: 'g3', url: '/avatars/girl3.jpg', gender: 'female' },
+  { id: 'g4', url: '/avatars/girl4.jpg', gender: 'female' },
+  { id: 'g5', url: '/avatars/girl5.jpg', gender: 'female' },
 ];
 
 export default function ProfilePage() {
@@ -16,6 +21,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(profile.name);
   const [editAvatar, setEditAvatar] = useState(profile.avatar);
+  const [genderFilter, setGenderFilter] = useState('male'); 
 
   const unlockedProvincesCount = Object.values(provinces).filter(p => p.isUnlocked).length;
   const totalProvincesCount = Object.keys(provinces).length;
@@ -26,7 +32,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8">
+    <div className="max-w-3xl mx-auto space-y-8 pb-10">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-text">AxaraProfile</h1>
@@ -47,23 +53,53 @@ export default function ProfilePage() {
         {isEditing ? (
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-bold text-text mb-2">Pilih Avatar</label>
-              <div className="flex flex-wrap gap-3">
-                {AVATARS.map((a) => (
+              <label className="block text-sm font-bold text-text mb-3">Pilih Avatar Baru</label>
+              
+              {/* Tab Selector Gender */}
+              <div className="flex gap-2 mb-4 bg-cream p-1 rounded-xl w-fit">
+                <button
+                  onClick={() => setGenderFilter('male')}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                    genderFilter === 'male' ? 'bg-primary text-white shadow-md' : 'text-text-light'
+                  }`}
+                >
+                  Laki-laki
+                </button>
+                <button
+                  onClick={() => setGenderFilter('female')}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                    genderFilter === 'female' ? 'bg-primary text-white shadow-md' : 'text-text-light'
+                  }`}
+                >
+                  Perempuan
+                </button>
+              </div>
+
+              {/* Avatar Grid */}
+              <div className="grid grid-cols-5 gap-3">
+                {AVATARS.filter(a => a.gender === genderFilter).map((a) => (
                   <button
                     key={a.id}
-                    onClick={() => setEditAvatar(a.emoji)}
-                    className={`w-16 h-16 text-3xl rounded-2xl flex items-center justify-center border-4 transition-all ${
-                      editAvatar === a.emoji 
-                        ? 'border-primary bg-cream scale-110' 
-                        : 'border-cream-dark bg-cream hover:border-primary/50'
+                    onClick={() => setEditAvatar(a.url)}
+                    className={`relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-200 ${
+                      editAvatar === a.url 
+                        ? 'border-primary scale-105 shadow-lg' 
+                        : 'border-cream-dark grayscale hover:grayscale-0 opacity-70 hover:opacity-100'
                     }`}
                   >
-                    {a.emoji}
+                    <img src={a.url} alt="Avatar" className="w-full h-full object-cover" />
+                    {editAvatar === a.url && (
+                      <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
+                        <div className="bg-primary text-white rounded-full p-1">
+                          <Check size={12} strokeWidth={4} />
+                        </div>
+                      </div>
+                    )}
                   </button>
                 ))}
               </div>
             </div>
+
             <div>
               <label className="block text-sm font-bold text-text mb-2">Nama Panggilan</label>
               <input 
@@ -72,8 +108,10 @@ export default function ProfilePage() {
                 onChange={(e) => setEditName(e.target.value)}
                 className="w-full px-4 py-3 bg-cream border-2 border-cream-dark rounded-xl focus:border-primary focus:outline-none font-bold text-text"
                 placeholder="Masukkan namamu..."
+                maxLength={15}
               />
             </div>
+
             <div className="flex justify-end gap-3 pt-2">
               <button 
                 onClick={() => {
@@ -89,14 +127,22 @@ export default function ProfilePage() {
                 onClick={handleSave}
                 className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl font-bold transition-colors shadow-lg shadow-primary/30"
               >
-                <Check size={18} /> Simpan
+                <Check size={18} /> Simpan Perubahan
               </button>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-6">
-            <div className="w-24 h-24 bg-cream border-4 border-primary/20 rounded-full flex items-center justify-center text-5xl">
-              {profile.avatar}
+            <div className="w-24 h-24 bg-cream border-4 border-primary/20 rounded-3xl overflow-hidden flex-shrink-0">
+              <img 
+                src={profile.avatar} 
+                alt="Profile" 
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // Fallback jika gambar tidak ditemukan
+                  e.target.src = "https://ui-avatars.com/api/?name=" + profile.name;
+                }}
+              />
             </div>
             <div>
               <h2 className="text-2xl font-black text-text">{profile.name}</h2>
@@ -110,26 +156,10 @@ export default function ProfilePage() {
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white border-2 border-cream-dark rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-          <Star className="w-8 h-8 text-primary mb-2" />
-          <p className="text-sm font-bold text-primary">Level</p>
-          <p className="text-2xl font-black text-text">{level}</p>
-        </div>
-        <div className="bg-white border-2 border-cream-dark rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-          <Award className="w-8 h-8 text-primary mb-2" />
-          <p className="text-sm font-bold text-primary">Total XP</p>
-          <p className="text-2xl font-black text-text">{xp}</p>
-        </div>
-        <div className="bg-white border-2 border-cream-dark rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-          <MapPin className="w-8 h-8 text-primary mb-2" />
-          <p className="text-sm font-bold text-primary">Provinsi</p>
-          <p className="text-2xl font-black text-text">{unlockedProvincesCount}/{totalProvincesCount}</p>
-        </div>
-        <div className="bg-white border-2 border-cream-dark rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-          <Shield className="w-8 h-8 text-primary mb-2" />
-          <p className="text-sm font-bold text-primary">Badges</p>
-          <p className="text-2xl font-black text-text">{badges.length}</p>
-        </div>
+        <StatCard icon={<Star />} label="Level" value={level} color="text-yellow-500" />
+        <StatCard icon={<Award />} label="Total XP" value={xp} color="text-orange-500" />
+        <StatCard icon={<MapPin />} label="Provinsi" value={`${unlockedProvincesCount}/${totalProvincesCount}`} color="text-red-500" />
+        <StatCard icon={<Shield />} label="Badges" value={badges.length} color="text-blue-500" />
       </div>
 
       {/* Badges Collection */}
@@ -156,13 +186,25 @@ export default function ProfilePage() {
                 <h3 className="font-bold text-text leading-tight mb-1">{badge.name}</h3>
                 <p className="text-xs text-text-light">{badge.description}</p>
                 <div className="mt-3 text-[10px] font-bold text-primary uppercase tracking-wider">
-                  Diperoleh {new Date(badge.unlockedAt).toLocaleDateString('id-ID')}
+                  Diperoleh {badge.unlockedAt ? new Date(badge.unlockedAt).toLocaleDateString('id-ID') : 'Baru saja'}
                 </div>
               </motion.div>
             ))}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, color }) {
+  return (
+    <div className="bg-white border-2 border-cream-dark rounded-2xl p-4 flex flex-col items-center justify-center text-center">
+      <div className={`${color} mb-2`}>
+        {icon}
+      </div>
+      <p className="text-xs font-bold text-text-light uppercase tracking-wider">{label}</p>
+      <p className="text-2xl font-black text-text">{value}</p>
     </div>
   );
 }

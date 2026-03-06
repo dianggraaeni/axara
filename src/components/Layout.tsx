@@ -15,16 +15,21 @@ export default function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const { xp, level, profile } = useAppStore();
 
-  return (
-    <div className="flex h-screen bg-cream text-text font-sans overflow-hidden">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 border-r border-cream-dark bg-white p-4">
-        <Link to="/" className="flex items-center gap-3 mb-8 px-2 hover:opacity-80 transition-opacity">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-xl">
-            A
-          </div>
-          <h1 className="text-2xl font-black text-primary tracking-tight">AXARA</h1>
-        </Link>
+    return (
+      <div className="flex h-screen bg-cream text-text font-sans overflow-hidden">
+        {/* Desktop Sidebar */}
+        <aside className="hidden md:flex flex-col w-64 border-r border-cream-dark bg-white p-4">
+          <Link to="/" className="flex items-center gap-3 mb-8 px-2 hover:opacity-80 transition-opacity">
+            <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+              <img 
+                src="/logo.png" 
+                alt="Axara Logo" 
+                className="w-full h-full object-contain" 
+                referrerPolicy="no-referrer"
+              />
+            </div>
+            <h1 className="text-2xl font-black text-primary tracking-tight">AXARA</h1>
+          </Link>
 
         <nav className="flex-1 space-y-2">
           {navItems.map((item) => {
@@ -51,9 +56,16 @@ export default function Layout({ children }: { children: ReactNode }) {
         {/* User Stats Summary */}
         <div className="mt-auto pt-4 border-t border-cream-dark">
           <Link to="/app/profile" className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-cream transition-colors group">
-            <div className="w-12 h-12 rounded-full bg-cream flex items-center justify-center border-2 border-primary/30 text-2xl group-hover:border-primary/60 transition-colors">
-              {profile.avatar}
-            </div>
+          <div className="w-12 h-12 rounded-full bg-cream border-2 border-primary/30 overflow-hidden group-hover:border-primary/60 transition-colors shrink-0">
+            <img 
+              src={profile.avatar} 
+              alt="Profile" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${profile.name}`;
+              }}
+            />
+          </div>
             <div>
               <p className="font-bold text-sm truncate max-w-[120px] text-text group-hover:text-primary transition-colors">{profile.name}</p>
               <div className="flex items-center gap-1 text-primary text-sm font-bold">
