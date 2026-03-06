@@ -11,13 +11,20 @@ import FloatingChat from '../components/FloatingChat';
 
 const floatingIcons = [
   { icon: '🏛️', label: 'Borobudur', delay: 0 },
-  { icon: '🦎', label: 'Komodo', delay: 0.2 },
-  { icon: '🌺', label: 'Rafflesia', delay: 0.4 },
-  { icon: '🎭', label: 'Wayang', delay: 0.6 },
-  { icon: '👘', label: 'Batik', delay: 0.8 },
-  { icon: '🏠', label: 'Rumah Gadang', delay: 1.0 },
-  { icon: '🎋', label: 'Angklung', delay: 1.2 },
-  { icon: '⛩️', label: 'Bali Temple', delay: 1.4 },
+  { icon: '🦎', label: 'Komodo', delay: 0.1 },
+  { icon: '🌺', label: 'Rafflesia', delay: 0.2 },
+  { icon: '🎭', label: 'Wayang', delay: 0.3 },
+  { icon: '👘', label: 'Batik', delay: 0.4 },
+  { icon: '🏠', label: 'Rumah Gadang', delay: 0.5 },
+  { icon: '🎋', label: 'Angklung', delay: 0.6 },
+  { icon: '⛩️', label: 'Bali Temple', delay: 0.7 },
+  { icon: '🌋', label: 'Bromo', delay: 0.8 },
+  { icon: '🍛', label: 'Rendang', delay: 0.9 },
+  { icon: '🐅', label: 'Harimau', delay: 1.0 },
+  { icon: '🪘', label: 'Gamelan', delay: 1.1 },
+  { icon: '🗡️', label: 'Keris', delay: 1.2 },
+  { icon: '🦅', label: 'Garuda', delay: 1.3 },
+  { icon: '🛶', label: 'Phinisi', delay: 1.4 },
 ];
 
 const features = [
@@ -60,41 +67,41 @@ const features = [
 ];
 
 const steps = [
-  { icon: Compass, label: 'Explore Province' },
-  { icon: BookOpen, label: 'Learn Culture' },
-  { icon: Target, label: 'Complete Quest' },
-  { icon: Star, label: 'Earn XP' },
-  { icon: Award, label: 'Unlock Badge' },
-  { icon: Trophy, label: 'Climb Leaderboard' },
+  { icon: Compass, label: 'Jelajahi Provinsi' },
+  { icon: BookOpen, label: 'Pelajari Budaya' },
+  { icon: Target, label: 'Selesaikan Quest' },
+  { icon: Star, label: 'Dapatkan XP' },
+  { icon: Award, label: 'Buka Badge' },
+  { icon: Trophy, label: 'Naik Peringkat' },
 ];
 
 const testimonials = [
   {
     name: 'Budi S.',
-    role: 'Student',
-    text: 'This platform makes learning Indonesian culture feel like playing a game.',
-    avatar: '👦🏽'
+    role: 'Pelajar',
+    text: 'Platform ini membuat belajar budaya Indonesia terasa seperti bermain game.',
+    avatar: '/avatar-budi.png'
   },
   {
     name: 'Ibu Ratna',
-    role: 'Teacher',
-    text: 'A beautiful way to introduce Nusantara culture to the younger generation.',
-    avatar: '👩🏽‍🏫'
+    role: 'Guru',
+    text: 'Cara yang indah untuk memperkenalkan budaya Nusantara kepada generasi muda.',
+    avatar: '/avatar-ratna.png'
   },
   {
     name: 'Sarah M.',
-    role: 'Traveler',
-    text: 'I discovered so many unique traditions I never knew existed.',
-    avatar: '👱🏼‍♀️'
+    role: 'Wisatawan',
+    text: 'Saya menemukan begitu banyak tradisi unik yang tidak pernah saya ketahui sebelumnya.',
+    avatar: '/avatar-sarah.png'
   }
 ];
 
 const faqs = [
-  { q: 'What is AXARA?', a: 'AXARA is a gamified platform where you explore Indonesian culture through interactive maps, quests, and AI-powered storytelling.' },
-  { q: 'How does the XP system work?', a: 'You earn XP by completing cultural quests, mini-games, and interacting with the AI guide. Accumulate XP to level up and unlock badges.' },
-  { q: 'Is the platform free?', a: 'Yes! AXARA is completely free to use for anyone who wants to learn about Indonesian culture.' },
-  { q: 'Can I explore all provinces?', a: 'We are continuously adding more provinces. Currently, you can explore several major regions, with more coming soon!' },
-  { q: 'Does AXARA use AI?', a: 'Yes, AXARA uses AI to generate dynamic quizzes and power the AxaraVerse cultural storyteller guide.' },
+  { q: 'Apa itu AXARA?', a: 'AXARA adalah platform gamifikasi di mana Anda menjelajahi budaya Indonesia melalui peta interaktif, quest, dan cerita berbasis AI.' },
+  { q: 'Bagaimana sistem XP bekerja?', a: 'Anda mendapatkan XP dengan menyelesaikan quest budaya, mini-game, dan berinteraksi dengan panduan AI. Kumpulkan XP untuk naik level dan membuka badge.' },
+  { q: 'Apakah platform ini gratis?', a: 'Ya! AXARA sepenuhnya gratis digunakan bagi siapa saja yang ingin belajar tentang budaya Indonesia.' },
+  { q: 'Bisakah saya menjelajahi semua provinsi?', a: 'Kami terus menambahkan lebih banyak provinsi. Saat ini, Anda dapat menjelajahi beberapa wilayah utama, dan lebih banyak lagi akan segera hadir!' },
+  { q: 'Apakah AXARA menggunakan AI?', a: 'Ya, AXARA menggunakan AI untuk menghasilkan kuis dinamis dan menggerakkan panduan cerita budaya AxaraVerse.' },
 ];
 
 export default function LandingPage() {
@@ -108,23 +115,23 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-display font-bold text-2xl shadow-lg shadow-primary/30">
-                A
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-display font-bold text-2xl shadow-lg shadow-primary/30 overflow-hidden">
+                <img src="/logo.png" alt="Axara Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
               </div>
               <span className="font-display font-bold text-2xl tracking-tight text-primary">AXARA</span>
             </div>
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="font-bold text-text-light hover:text-primary transition-colors">Features</a>
-              <a href="#how-it-works" className="font-bold text-text-light hover:text-primary transition-colors">How it Works</a>
+              <a href="#features" className="font-bold text-text-light hover:text-primary transition-colors">Fitur</a>
+              <a href="#how-it-works" className="font-bold text-text-light hover:text-primary transition-colors">Cara Bermain</a>
               <a href="#faq" className="font-bold text-text-light hover:text-primary transition-colors">FAQ</a>
               
               {/* Gamification UI in Navbar */}
               <div className="flex items-center gap-4 bg-cream px-4 py-2 rounded-2xl border border-cream-dark">
                 <div className="flex items-center gap-2">
                   <Flame className="text-primary" size={20} />
-                  <span className="font-bold text-text">Day 1</span>
+                  <span className="font-bold text-text">Hari 1</span>
                 </div>
                 <div className="w-px h-6 bg-cream-dark"></div>
                 <div className="flex items-center gap-2">
@@ -136,7 +143,7 @@ export default function LandingPage() {
               </div>
 
               <Link to="/app" className="bg-primary text-white px-6 py-3 rounded-2xl font-bold hover:bg-primary-hover transition-colors shadow-lg shadow-primary/30 hover:-translate-y-1 transform duration-200">
-                Play Now
+                Mulai Main
               </Link>
             </div>
 
@@ -149,48 +156,29 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-32 pb-16 bg-primary overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
+      <section className="relative pt-32 pb-0 bg-primary overflow-hidden flex flex-col justify-between min-h-[90vh]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex-1 flex items-center">
+          <div className="grid md:grid-cols-2 gap-12 items-center w-full pb-16">
             <motion.div 
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
               className="space-y-6"
             >
-              <div className="inline-block bg-white/20 text-white px-4 py-2 rounded-full font-bold text-sm mb-2 backdrop-blur-sm border border-white/30">
-                🎮 Gamified Cultural Learning
-              </div>
               <h1 className="text-5xl md:text-6xl font-display font-extrabold leading-tight text-white">
-                Explore the <span className="text-[#D4AF37]">Eternal Culture</span> of Nusantara
+                Jelajahi <span className="text-[#D4AF37]">Budaya Abadi</span> Nusantara
               </h1>
               <p className="text-lg text-white/90 font-medium leading-relaxed">
-                AXARA is a gamified platform where you explore Indonesian culture through interactive maps, quests, and AI-powered storytelling.
+                AXARA adalah platform gamifikasi di mana Anda menjelajahi budaya Indonesia melalui peta interaktif, quest, dan cerita berbasis AI.
               </p>
               <div className="flex flex-wrap gap-4 pt-4">
                 <Link to="/app" className="bg-white text-primary px-8 py-4 rounded-2xl font-bold text-lg hover:bg-cream transition-all shadow-xl hover:-translate-y-1 flex items-center gap-2">
-                  Start Exploring <ArrowRight size={20} />
+                  Mulai Menjelajah <ArrowRight size={20} />
                 </Link>
                 <a href="#features" className="bg-transparent text-white border-2 border-white/50 px-8 py-4 rounded-2xl font-bold text-lg hover:border-white hover:bg-white/10 transition-all">
-                  See Features
+                  Lihat Fitur
                 </a>
               </div>
-              
-              {/* Daily Quest Notification */}
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
-                className="mt-8 bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-white/20 flex items-center gap-4 shadow-sm inline-flex"
-              >
-                <div className="w-12 h-12 bg-[#D4AF37]/20 rounded-xl flex items-center justify-center text-[#D4AF37]">
-                  <Target size={24} />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-white/70 uppercase tracking-wider">Daily Quest</p>
-                  <p className="font-bold text-white">Identify 3 traditional instruments</p>
-                </div>
-              </motion.div>
             </motion.div>
 
             <motion.div 
@@ -199,34 +187,34 @@ export default function LandingPage() {
               transition={{ duration: 0.6 }}
               className="relative h-[400px] flex items-center justify-center"
             >
+              {/* Glow Effect */}
+              <div className="absolute inset-0 bg-white/30 blur-[100px] rounded-full transform scale-125 z-0"></div>
+              
               {/* Mascot Placeholder */}
-              <div className="relative z-10 w-72 h-80 bg-white rounded-[3rem] border-4 border-white/50 shadow-2xl flex flex-col items-center justify-center p-6 transform rotate-3">
-                <div className="text-8xl mb-4">🤠</div>
-                <div className="text-center">
-                  <h3 className="font-display font-bold text-2xl text-primary">Axara Explorer</h3>
-                  <p className="text-sm text-text-light font-medium">Ready for adventure!</p>
+              <div className="relative z-10 w-72 h-80 bg-white rounded-[3rem] border-4 border-white/50 shadow-2xl flex items-center justify-center transform rotate-3 overflow-visible">
+                {/* Welcome Bubble */}
+                <div className="absolute -top-12 -right-8 bg-white px-6 py-3 rounded-2xl rounded-bl-none shadow-xl border-2 border-cream-dark z-30 animate-bounce">
+                  <p className="font-display font-bold text-primary text-lg whitespace-nowrap">Selamat datang! 👋</p>
                 </div>
-                <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-[#D4AF37] rounded-full flex items-center justify-center text-white shadow-lg border-4 border-white">
-                  <Map size={24} />
-                </div>
+                <img src="/mascot.png" alt="Axara Explorer" className="w-full h-full object-cover rounded-[2.5rem]" referrerPolicy="no-referrer" />
               </div>
             </motion.div>
           </div>
         </div>
 
         {/* Bottom Strip for Floating Icons */}
-        <div className="w-full bg-white/10 py-6 border-t border-white/20 overflow-hidden relative">
-          <div className="flex justify-center gap-8 md:gap-16 px-4 max-w-7xl mx-auto flex-wrap">
+        <div className="w-full bg-white/10 py-6 border-t border-white/20 overflow-hidden relative mt-auto">
+          <div className="flex justify-between items-center gap-4 px-4 w-full overflow-x-auto no-scrollbar">
             {floatingIcons.map((item, i) => (
               <motion.div
                 key={i}
                 whileHover={{ scale: 1.2, y: -5 }}
-                className="flex flex-col items-center gap-2 group cursor-pointer"
+                className="flex flex-col items-center gap-2 group cursor-pointer shrink-0"
               >
                 <div className="w-14 h-14 bg-white rounded-full shadow-lg flex items-center justify-center text-3xl border-2 border-white/50">
                   {item.icon}
                 </div>
-                <span className="text-white/90 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                <span className="text-white/90 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap absolute -bottom-6">
                   {item.label}
                 </span>
               </motion.div>
@@ -240,10 +228,10 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-20">
             <h2 className="text-4xl font-display font-extrabold mb-4 text-primary">
-              Discover Indonesia Like a <span className="text-[#D4AF37]">Cultural Adventure</span>
+              Jelajahi Indonesia Layaknya <span className="text-[#D4AF37]">Petualangan Budaya</span>
             </h2>
             <p className="text-text-light font-medium text-lg">
-              Learn, play, and explore through our interactive gamified features.
+              Belajar, bermain, dan menjelajah melalui fitur gamifikasi interaktif kami.
             </p>
           </div>
 
@@ -305,13 +293,13 @@ export default function LandingPage() {
       <section id="how-it-works" className="py-24 bg-primary text-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-display font-extrabold mb-4">How the Adventure Works</h2>
-            <p className="text-white/80 font-medium text-lg">Your journey to becoming a Culture Master.</p>
+            <h2 className="text-4xl font-display font-extrabold mb-4">Cara Bermain</h2>
+            <p className="text-white/80 font-medium text-lg">Perjalananmu menjadi Master Budaya.</p>
           </div>
 
           <div className="relative">
             {/* Connecting Line */}
-            <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-white/20 -translate-y-1/2"></div>
+            <div className="hidden md:block absolute top-[32px] left-0 w-full h-1 bg-white/20 -translate-y-1/2"></div>
             
             <div className="grid grid-cols-2 md:grid-cols-6 gap-8 relative z-10">
               {steps.map((step, i) => (
@@ -338,7 +326,7 @@ export default function LandingPage() {
       <section className="py-24 bg-cream">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-display font-extrabold text-primary mb-4">What Explorers Say</h2>
+            <h2 className="text-4xl font-display font-extrabold text-primary mb-4">Kata Penjelajah</h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
@@ -349,15 +337,15 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white p-8 rounded-3xl border-2 border-cream-dark shadow-sm"
+                className="bg-white p-8 rounded-3xl border-2 border-cream-dark shadow-sm flex flex-col h-full"
               >
                 <div className="flex text-[#D4AF37] mb-4">
                   {[...Array(5)].map((_, j) => <Star key={j} size={20} fill="currentColor" />)}
                 </div>
-                <p className="text-text font-medium mb-6 leading-relaxed">"{t.text}"</p>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-cream rounded-full flex items-center justify-center text-2xl border border-cream-dark">
-                    {t.avatar}
+                <p className="text-text font-medium mb-6 leading-relaxed flex-1">"{t.text}"</p>
+                <div className="flex items-center gap-4 mt-auto">
+                  <div className="w-12 h-12 bg-cream rounded-full flex items-center justify-center text-2xl border border-cream-dark overflow-hidden shrink-0">
+                    <img src={t.avatar} alt={t.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   </div>
                   <div>
                     <h4 className="font-bold text-primary">{t.name}</h4>
@@ -374,7 +362,7 @@ export default function LandingPage() {
       <section id="faq" className="py-24 bg-white">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-display font-extrabold text-primary mb-4">Frequently Asked Questions</h2>
+            <h2 className="text-4xl font-display font-extrabold text-primary mb-4">Pertanyaan yang Sering Diajukan</h2>
           </div>
 
           <div className="space-y-4">
@@ -406,13 +394,13 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-2 gap-16 mb-16">
             <div>
               <div className="flex items-center gap-2 mb-6">
-                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-display font-bold text-2xl">
-                  A
+                <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-display font-bold text-2xl overflow-hidden">
+                  <img src="/logo.png" alt="Axara Logo" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
                 <span className="font-display font-bold text-3xl tracking-tight text-primary">AXARA</span>
               </div>
               <p className="text-text font-medium mb-8 max-w-md leading-relaxed">
-                Preserving Culture Through Exploration. Join us in making Indonesian history and traditions accessible and fun for everyone.
+                Melestarikan Budaya Melalui Eksplorasi. Bergabunglah bersama kami dalam membuat sejarah dan tradisi Indonesia dapat diakses dan menyenangkan bagi semua orang.
               </p>
               <div className="flex gap-4">
                 <a href="#" className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-primary hover:bg-primary hover:text-white transition-colors shadow-sm border border-cream">
@@ -428,32 +416,32 @@ export default function LandingPage() {
             </div>
 
             <div className="bg-white p-8 rounded-3xl border-2 border-cream shadow-sm">
-              <h3 className="text-2xl font-display font-bold mb-6 text-primary">Get in Touch</h3>
+              <h3 className="text-2xl font-display font-bold mb-6 text-primary">Hubungi Kami</h3>
               <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
                 <input 
                   type="text" 
-                  placeholder="Your Name" 
+                  placeholder="Nama Anda" 
                   className="w-full bg-cream border-2 border-cream-dark rounded-xl px-4 py-3 text-text focus:outline-none focus:border-primary transition-colors font-bold placeholder:text-text-light"
                 />
                 <input 
                   type="email" 
-                  placeholder="Your Email" 
+                  placeholder="Email Anda" 
                   className="w-full bg-cream border-2 border-cream-dark rounded-xl px-4 py-3 text-text focus:outline-none focus:border-primary transition-colors font-bold placeholder:text-text-light"
                 />
                 <textarea 
-                  placeholder="Your Message" 
+                  placeholder="Pesan Anda" 
                   rows={4}
                   className="w-full bg-cream border-2 border-cream-dark rounded-xl px-4 py-3 text-text focus:outline-none focus:border-primary transition-colors resize-none font-bold placeholder:text-text-light"
                 ></textarea>
                 <button className="w-full bg-primary text-white font-bold py-4 rounded-xl hover:bg-primary-hover transition-colors flex justify-center items-center gap-2 shadow-lg shadow-primary/20">
-                  Send Message <Send size={18} />
+                  Kirim Pesan <Send size={18} />
                 </button>
               </form>
             </div>
           </div>
 
           <div className="border-t border-cream pt-8 text-center text-text-light font-bold text-sm">
-            &copy; {new Date().getFullYear()} AXARA. All rights reserved.
+            &copy; {new Date().getFullYear()} AXARA. Hak Cipta Dilindungi.
           </div>
         </div>
       </footer>

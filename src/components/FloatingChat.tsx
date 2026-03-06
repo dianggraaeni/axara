@@ -70,8 +70,8 @@ export default function FloatingChat() {
             {/* Header */}
             <div className="bg-primary p-4 flex items-center justify-between text-white">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm text-2xl">
-                  🤠
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm text-2xl overflow-hidden shrink-0">
+                  <img src="/axarabot.png" alt="AxaraBot" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
                 <div>
                   <h2 className="font-bold text-lg leading-tight">AxaraBot</h2>
@@ -144,9 +144,9 @@ export default function FloatingChat() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-16 h-16 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center z-50 border-4 border-white"
+        className="fixed bottom-6 right-6 w-16 h-16 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center z-50 border-4 border-white overflow-hidden"
       >
-        {isOpen ? <X size={28} /> : <span className="text-3xl">🤠</span>}
+        {isOpen ? <X size={28} /> : <img src="/axarabot.png" alt="AxaraBot" className="w-full h-full object-cover" referrerPolicy="no-referrer" />}
       </motion.button>
     </>
   );
