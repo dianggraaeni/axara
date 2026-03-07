@@ -1,35 +1,66 @@
-import { useState } from 'react';
-import { useAppStore } from '../store/useAppStore';
-import { Award, Star, MapPin, Shield, Edit2, Check, User, UserPlus } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+// src/pages/Profile.tsx
+// Diupdate: data dari backend API, update profil dan avatar lewat API.
 
-const AVATARS = [
-  { id: 'b1', url: '/avatars/boy1.jpg', gender: 'male' },
-  { id: 'b2', url: '/avatars/boy2.jpg', gender: 'male' },
-  { id: 'b3', url: '/avatars/boy3.jpg', gender: 'male' },
-  { id: 'b4', url: '/avatars/boy4.jpg', gender: 'male' },
-  { id: 'b5', url: '/avatars/boy5.jpg', gender: 'male' },
-  { id: 'g1', url: '/avatars/girl1.jpg', gender: 'female' },
-  { id: 'g2', url: '/avatars/girl2.jpg', gender: 'female' },
-  { id: 'g3', url: '/avatars/girl3.jpg', gender: 'female' },
-  { id: 'g4', url: '/avatars/girl4.jpg', gender: 'female' },
-  { id: 'g5', url: '/avatars/girl5.jpg', gender: 'female' },
-];
+import { useState } from 'react';
+import { Award, Star, MapPin, Shield, Edit2, Check, Loader2, LogOut, TrendingUp } from 'lucide-react';
+import { motion } from 'motion/react';
+import { useAuth } from '../context/AuthContext';
+import { useUserStats, useUserBadges } from '../hooks/useBackendData';
+import { usersService } from '../services/users.service';
 
 export default function ProfilePage() {
-  const { profile, updateProfile, xp, level, badges, provinces } = useAppStore();
+  const { user, logout, updateUser } = useAuth();
+  const { stats, isLoading: statsLoading, refetch: refetchStats } = useUserStats();
+  const { badges, isLoading: badgesLoading, refetch: refetchBadges } = useUserBadges();
+
   const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(profile.name);
-  const [editAvatar, setEditAvatar] = useState(profile.avatar);
-  const [genderFilter, setGenderFilter] = useState('male'); 
+  const [editName, setEditName] = useState(user?.username ?? '');
+  const [editGender, setEditGender] = useState<'male' | 'female'>(user?.gender ?? 'male');
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
-  const unlockedProvincesCount = Object.values(provinces).filter(p => p.isUnlocked).length;
-  const totalProvincesCount = Object.keys(provinces).length;
-
-  const handleSave = () => {
-    updateProfile({ name: editName, avatar: editAvatar });
-    setIsEditing(false);
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveError('');
+    try {
+      const updated = await usersService.updateProfile({ username: editName, gender: editGender });
+      updateUser({ username: updated.username, gender: updated.gender });
+      await refetchStats();
+      setIsEditing(false);
+    } catch (e: any) {
+      setSaveError(e?.response?.data?.error ?? 'Gagal menyimpan profil.');
+    } finally {
+      setIsSaving(false);
+    }
   };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const result = await usersService.uploadAvatar(file);
+      updateUser({ avatarUrl: result.avatarUrl });
+    } catch (e: any) {
+      alert(e?.response?.data?.error ?? 'Gagal upload avatar.');
+    }
+  };
+
+  const handleLogout = async () => {
+    if (confirm('Yakin ingin keluar?')) {
+      await logout();
+    }
+  };
+
+  const name = user?.username ?? 'Petualang';
+  const avatarUrl = user?.avatarUrl;
+  const xp = stats?.xp ?? user?.xp ?? 0;
+  const level = stats?.level ?? user?.level ?? 1;
+  const xpToNext = stats?.xpToNext ?? 0;
+  const levelProgress = stats?.levelProgress ?? 0;
+  const streakDays = stats?.streakDays ?? user?.streakDays ?? 0;
+  const provincesUnlocked = stats?.provincesUnlocked ?? 0;
+  const provincesCompleted = stats?.provincesCompleted ?? 0;
+  const badgeCount = stats?.badges ?? badges.length;
 
   return (
     <div className="max-w-3xl mx-auto space-y-8 pb-10">
@@ -38,158 +69,184 @@ export default function ProfilePage() {
           <h1 className="text-3xl font-black text-text">AxaraProfile</h1>
           <p className="text-text-light font-medium mt-2">Atur profil dan lihat pencapaianmu.</p>
         </div>
-        {!isEditing && (
-          <button 
-            onClick={() => setIsEditing(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-cream hover:bg-cream-dark text-text rounded-xl font-bold transition-colors border-2 border-cream-dark"
+        <div className="flex gap-2">
+          {!isEditing && (
+            <button
+              onClick={() => { setIsEditing(true); setEditName(name); }}
+              className="flex items-center gap-2 px-4 py-2 bg-cream hover:bg-cream-dark text-text rounded-xl font-bold transition-colors border-2 border-cream-dark"
+            >
+              <Edit2 size={16} /> Edit Profil
+            </button>
+          )}
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl font-bold transition-colors border-2 border-red-100"
           >
-            <Edit2 size={16} /> Edit Profil
+            <LogOut size={16} /> Keluar
           </button>
-        )}
+        </div>
       </header>
 
-      {/* Profile Info / Edit Form */}
+      {/* Profile Card */}
       <div className="bg-white border-2 border-cream-dark rounded-3xl p-6 shadow-sm">
         {isEditing ? (
-          <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-bold text-text mb-3">Pilih Avatar Baru</label>
-              
-              {/* Tab Selector Gender */}
-              <div className="flex gap-2 mb-4 bg-cream p-1 rounded-xl w-fit">
-                <button
-                  onClick={() => setGenderFilter('male')}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
-                    genderFilter === 'male' ? 'bg-primary text-white shadow-md' : 'text-text-light'
-                  }`}
-                >
-                  Laki-laki
-                </button>
-                <button
-                  onClick={() => setGenderFilter('female')}
-                  className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${
-                    genderFilter === 'female' ? 'bg-primary text-white shadow-md' : 'text-text-light'
-                  }`}
-                >
-                  Perempuan
-                </button>
-              </div>
+          <div className="space-y-5">
+            <div className="flex items-center gap-4">
+              <label className="relative cursor-pointer group">
+                <div className="w-20 h-20 rounded-2xl bg-cream border-2 border-primary/20 overflow-hidden">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-3xl font-black text-primary">
+                      {name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">Ubah</span>
+                  </div>
+                </div>
+                <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
+              </label>
+              <p className="text-sm text-text-light font-medium">Klik foto untuk upload avatar baru</p>
+            </div>
 
-              {/* Avatar Grid */}
-              <div className="grid grid-cols-5 gap-3">
-                {AVATARS.filter(a => a.gender === genderFilter).map((a) => (
+            <div>
+              <label className="block text-sm font-bold text-text mb-2">Username</label>
+              <input
+                type="text"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                className="w-full px-4 py-3 bg-cream border-2 border-cream-dark rounded-xl focus:border-primary focus:outline-none font-bold text-text"
+                maxLength={50}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-text mb-2">Gender</label>
+              <div className="flex gap-3">
+                {(['male', 'female'] as const).map((g) => (
                   <button
-                    key={a.id}
-                    onClick={() => setEditAvatar(a.url)}
-                    className={`relative aspect-square rounded-2xl overflow-hidden border-4 transition-all duration-200 ${
-                      editAvatar === a.url 
-                        ? 'border-primary scale-105 shadow-lg' 
-                        : 'border-cream-dark grayscale hover:grayscale-0 opacity-70 hover:opacity-100'
+                    key={g}
+                    onClick={() => setEditGender(g)}
+                    className={`flex-1 py-2.5 rounded-xl font-bold text-sm border-2 transition-all ${
+                      editGender === g ? 'border-primary bg-primary/5 text-primary' : 'border-cream-dark text-text-light'
                     }`}
                   >
-                    <img src={a.url} alt="Avatar" className="w-full h-full object-cover" />
-                    {editAvatar === a.url && (
-                      <div className="absolute inset-0 bg-primary/10 flex items-center justify-center">
-                        <div className="bg-primary text-white rounded-full p-1">
-                          <Check size={12} strokeWidth={4} />
-                        </div>
-                      </div>
-                    )}
+                    {g === 'male' ? '👦 Laki-laki' : '👧 Perempuan'}
                   </button>
                 ))}
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-text mb-2">Nama Panggilan</label>
-              <input 
-                type="text" 
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                className="w-full px-4 py-3 bg-cream border-2 border-cream-dark rounded-xl focus:border-primary focus:outline-none font-bold text-text"
-                placeholder="Masukkan namamu..."
-                maxLength={15}
-              />
-            </div>
+            {saveError && <p className="text-red-500 text-sm font-medium">{saveError}</p>}
 
-            <div className="flex justify-end gap-3 pt-2">
-              <button 
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditName(profile.name);
-                  setEditAvatar(profile.avatar);
-                }}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setIsEditing(false)}
                 className="px-6 py-3 rounded-xl font-bold text-text-light hover:bg-cream transition-colors"
               >
                 Batal
               </button>
-              <button 
+              <button
                 onClick={handleSave}
-                className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl font-bold transition-colors shadow-lg shadow-primary/30"
+                disabled={isSaving}
+                className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary-hover text-white rounded-xl font-bold transition-colors shadow-lg shadow-primary/30 disabled:opacity-60"
               >
-                <Check size={18} /> Simpan Perubahan
+                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
+                Simpan
               </button>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-6">
             <div className="w-24 h-24 bg-cream border-4 border-primary/20 rounded-3xl overflow-hidden flex-shrink-0">
-              <img 
-                src={profile.avatar} 
-                alt="Profile" 
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  // Fallback jika gambar tidak ditemukan
-                  e.target.src = "https://ui-avatars.com/api/?name=" + profile.name;
-                }}
-              />
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-4xl font-black text-primary">
+                  {name.charAt(0).toUpperCase()}
+                </div>
+              )}
             </div>
             <div>
-              <h2 className="text-2xl font-black text-text">{profile.name}</h2>
-              <div className="inline-flex items-center gap-1 px-3 py-1 bg-cream text-primary rounded-full text-sm font-bold mt-2 border border-primary/20">
-                <Award size={14} /> Petualang Budaya
+              <h2 className="text-2xl font-black text-text">{name}</h2>
+              <p className="text-text-light text-sm font-medium">{user?.email}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="inline-flex items-center gap-1 px-3 py-1 bg-cream text-primary rounded-full text-sm font-bold border border-primary/20">
+                  <Award size={14} /> Petualang Budaya
+                </div>
+                {streakDays > 0 && (
+                  <div className="inline-flex items-center gap-1 px-3 py-1 bg-orange-50 text-orange-500 rounded-full text-sm font-bold border border-orange-200">
+                    🔥 {streakDays} hari
+                  </div>
+                )}
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* Stats Overview */}
+      {/* Level Progress */}
+      {!statsLoading && stats && (
+        <div className="bg-white border-2 border-cream-dark rounded-3xl p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="text-primary" size={20} />
+              <span className="font-bold text-text">Level {level}</span>
+            </div>
+            <span className="text-sm font-bold text-text-light">{xpToNext > 0 ? `${xpToNext} XP lagi ke Level ${level + 1}` : 'Level Maksimum!'}</span>
+          </div>
+          <div className="h-4 bg-cream-dark rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-primary rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${levelProgress}%` }}
+              transition={{ duration: 1, ease: 'easeOut' }}
+            />
+          </div>
+          <p className="text-right text-xs font-bold text-text-light mt-1">{levelProgress}%</p>
+        </div>
+      )}
+
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard icon={<Star />} label="Level" value={level} color="text-yellow-500" />
         <StatCard icon={<Award />} label="Total XP" value={xp} color="text-orange-500" />
-        <StatCard icon={<MapPin />} label="Provinsi" value={`${unlockedProvincesCount}/${totalProvincesCount}`} color="text-red-500" />
-        <StatCard icon={<Shield />} label="Badges" value={badges.length} color="text-blue-500" />
+        <StatCard icon={<MapPin />} label="Provinsi" value={`${provincesCompleted}/${provincesUnlocked}`} color="text-red-500" />
+        <StatCard icon={<Shield />} label="Badges" value={badgeCount} color="text-blue-500" />
       </div>
 
-      {/* Badges Collection */}
+      {/* Badges */}
       <div>
         <h2 className="text-2xl font-bold text-text mb-4">Koleksi Badge</h2>
-        {badges.length === 0 ? (
+        {badgesLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="w-8 h-8 text-primary animate-spin" /></div>
+        ) : badges.length === 0 ? (
           <div className="bg-cream border-2 border-dashed border-cream-dark rounded-3xl p-8 text-center">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm">
-              🏆
-            </div>
+            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm">🏆</div>
             <p className="text-text-light font-medium">Belum ada badge yang terkumpul.</p>
             <p className="text-sm text-text-light mt-1">Selesaikan quest di AxaraWorld untuk mendapatkan badge!</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {badges.map((badge) => (
-              <motion.div
-                key={badge.id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white border-2 border-primary/20 rounded-2xl p-4 flex flex-col items-center text-center shadow-sm"
-              >
-                <div className="text-5xl mb-3">{badge.icon}</div>
-                <h3 className="font-bold text-text leading-tight mb-1">{badge.name}</h3>
-                <p className="text-xs text-text-light">{badge.description}</p>
-                <div className="mt-3 text-[10px] font-bold text-primary uppercase tracking-wider">
-                  Diperoleh {badge.unlockedAt ? new Date(badge.unlockedAt).toLocaleDateString('id-ID') : 'Baru saja'}
-                </div>
-              </motion.div>
-            ))}
+            {badges.map((ub: any) => {
+              const badge = ub.badge ?? ub;
+              return (
+                <motion.div
+                  key={ub.id ?? badge.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white border-2 border-primary/20 rounded-2xl p-4 flex flex-col items-center text-center shadow-sm"
+                >
+                  <div className="text-5xl mb-3">{badge.icon ?? '🏅'}</div>
+                  <h3 className="font-bold text-text leading-tight mb-1">{badge.name}</h3>
+                  <p className="text-xs text-text-light">{badge.description}</p>
+                  <div className="mt-3 text-[10px] font-bold text-primary uppercase tracking-wider">
+                    {ub.unlockedAt ? new Date(ub.unlockedAt).toLocaleDateString('id-ID') : 'Baru saja'}
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -197,12 +254,10 @@ export default function ProfilePage() {
   );
 }
 
-function StatCard({ icon, label, value, color }) {
+function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: any; color: string }) {
   return (
     <div className="bg-white border-2 border-cream-dark rounded-2xl p-4 flex flex-col items-center justify-center text-center">
-      <div className={`${color} mb-2`}>
-        {icon}
-      </div>
+      <div className={`${color} mb-2`}>{icon}</div>
       <p className="text-xs font-bold text-text-light uppercase tracking-wider">{label}</p>
       <p className="text-2xl font-black text-text">{value}</p>
     </div>

@@ -1,7 +1,10 @@
+// src/pages/Chat.tsx
+// Diupdate: chat pakai Gemini langsung via chatWithGuide (konsisten dengan FloatingChat).
+
 import { useState, useRef, useEffect } from 'react';
-import { chatWithGuide } from '../services/gemini';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, Bot, User, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
+import { chatWithGuide } from '../services/ai.service';
 
 interface Message {
   id: string;
@@ -14,7 +17,7 @@ export default function ChatPage() {
     {
       id: '1',
       role: 'model',
-      text: 'Halo! Aku Axara, pemandu budaya Nusantara kamu. Ada yang ingin kamu tanyakan tentang budaya, sejarah, atau tradisi di Indonesia?',
+      text: 'Halo! Aku Axara, pemandu budaya Nusantara kamu 🌺 Ada yang ingin kamu tanyakan tentang budaya, sejarah, atau tradisi di Indonesia?',
     },
   ]);
   const [input, setInput] = useState('');
@@ -25,9 +28,7 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  useEffect(() => { scrollToBottom(); }, [messages]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -38,18 +39,26 @@ export default function ChatPage() {
     setIsLoading(true);
 
     try {
-      // Format history for Gemini API
-      const history = messages.map(m => ({
+      // Format history untuk Gemini
+      const history = messages.map((m) => ({
         role: m.role,
-        parts: [{ text: m.text }]
+        parts: [{ text: m.text }],
       }));
 
       const responseText = await chatWithGuide(userMsg.text, history);
-      
-      const aiMsg: Message = { id: (Date.now() + 1).toString(), role: 'model', text: responseText };
-      setMessages((prev) => [...prev, aiMsg]);
+
+      setMessages((prev) => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: responseText,
+      }]);
     } catch (error) {
       console.error(error);
+      setMessages((prev) => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'model',
+        text: 'Maaf, terjadi kesalahan. Coba lagi ya!',
+      }]);
     } finally {
       setIsLoading(false);
     }
@@ -83,8 +92,8 @@ export default function ChatPage() {
               {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
             </div>
             <div className={`max-w-[75%] p-3 rounded-2xl ${
-              msg.role === 'user' 
-                ? 'bg-[#D4AF37] text-white rounded-tr-sm' 
+              msg.role === 'user'
+                ? 'bg-[#D4AF37] text-white rounded-tr-sm'
                 : 'bg-white border-2 border-cream-dark text-text rounded-tl-sm'
             }`}>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.text}</p>
@@ -93,7 +102,7 @@ export default function ChatPage() {
         ))}
         {isLoading && (
           <div className="flex gap-3">
-             <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shrink-0">
               <Bot size={16} />
             </div>
             <div className="bg-white border-2 border-cream-dark p-4 rounded-2xl rounded-tl-sm flex gap-1">
@@ -114,7 +123,7 @@ export default function ChatPage() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Tanya tentang budaya..."
+            placeholder="Tanya tentang budaya Indonesia..."
             className="flex-1 bg-cream border-2 border-cream-dark rounded-xl px-4 py-3 focus:outline-none focus:border-primary focus:bg-white transition-colors text-text placeholder:text-text-light font-medium"
           />
           <button
@@ -122,7 +131,7 @@ export default function ChatPage() {
             disabled={!input.trim() || isLoading}
             className="bg-primary text-white p-3 rounded-xl hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <Send size={24} />
+            {isLoading ? <Loader2 size={24} className="animate-spin" /> : <Send size={24} />}
           </button>
         </div>
       </div>

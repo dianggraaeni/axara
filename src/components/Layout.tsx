@@ -1,8 +1,12 @@
+// src/components/Layout.tsx
+// Diupdate: pakai AuthContext untuk data user, bukan useAppStore.
+
 import { ReactNode } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { Map, Swords, MessageCircle, User, Award } from 'lucide-react';
+import { Link, useLocation, Navigate } from 'react-router-dom';
+import { Map, Swords, MessageCircle, User, Award, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { useAppStore } from '../store/useAppStore';
+import { useAuth } from '../context/AuthContext';
+import { useUserStats } from '../hooks/useBackendData';
 
 const navItems = [
   { path: '/app', label: 'AxaraWorld', icon: Map },
@@ -13,23 +17,39 @@ const navItems = [
 
 export default function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
-  const { xp, level, profile } = useAppStore();
+  const { user, isLoading, isAuthenticated } = useAuth();
+  const { stats } = useUserStats();
 
+  // Saat AuthContext masih restore session (cek localStorage / hit /auth/refresh)
+  if (isLoading) {
     return (
-      <div className="flex h-screen bg-cream text-text font-sans overflow-hidden">
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:flex flex-col w-64 border-r border-cream-dark bg-white p-4">
-          <Link to="/" className="flex items-center gap-3 mb-8 px-2 hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
-              <img 
-                src="/logo.png" 
-                alt="Axara Logo" 
-                className="w-full h-full object-contain" 
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            <h1 className="text-2xl font-black text-primary tracking-tight">AXARA</h1>
-          </Link>
+      <div className="h-screen flex items-center justify-center bg-cream flex-col gap-3">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+        <p className="text-text-light font-medium text-sm">Memuat...</p>
+      </div>
+    );
+  }
+
+  // Sudah selesai cek, tapi tidak ada user → redirect ke /login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const xp = stats?.xp ?? user?.xp ?? 0;
+  const level = stats?.level ?? user?.level ?? 1;
+  const avatarUrl = user?.avatarUrl ?? null;
+  const name = user?.username ?? 'Petualang';
+
+  return (
+    <div className="flex h-screen bg-cream text-text font-sans overflow-hidden">
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex flex-col w-64 border-r border-cream-dark bg-white p-4">
+        <Link to="/" className="flex items-center gap-3 mb-8 px-2 hover:opacity-80 transition-opacity">
+          <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+            <img src="/logo.png" alt="Axara Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+          </div>
+          <h1 className="text-2xl font-black text-primary tracking-tight">AXARA</h1>
+        </Link>
 
         <nav className="flex-1 space-y-2">
           {navItems.map((item) => {
@@ -53,21 +73,20 @@ export default function Layout({ children }: { children: ReactNode }) {
           })}
         </nav>
 
-        {/* User Stats Summary */}
+        {/* User Stats */}
         <div className="mt-auto pt-4 border-t border-cream-dark">
           <Link to="/app/profile" className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-cream transition-colors group">
-          <div className="w-12 h-12 rounded-full bg-cream border-2 border-primary/30 overflow-hidden group-hover:border-primary/60 transition-colors shrink-0">
-            <img 
-              src={profile.avatar} 
-              alt="Profile" 
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${profile.name}`;
-              }}
-            />
-          </div>
+            <div className="w-12 h-12 rounded-full bg-cream border-2 border-primary/30 overflow-hidden group-hover:border-primary/60 transition-colors shrink-0">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-xl font-black text-primary">
+                  {name.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
             <div>
-              <p className="font-bold text-sm truncate max-w-[120px] text-text group-hover:text-primary transition-colors">{profile.name}</p>
+              <p className="font-bold text-sm truncate max-w-[120px] text-text group-hover:text-primary transition-colors">{name}</p>
               <div className="flex items-center gap-1 text-primary text-sm font-bold">
                 <Award size={16} />
                 <span>Lv.{level} • {xp} XP</span>
