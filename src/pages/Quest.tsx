@@ -42,7 +42,7 @@ function GuessCultureGame({
   onBack: () => void;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const[selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [score, setScore] = useState(0);
@@ -161,10 +161,10 @@ export default function QuestPage() {
   const provinceName = provinceId ? (PROVINCE_NAMES[provinceId] ?? provinceId.replace(/-/g, ' ')) : 'Indonesia';
 
   const [selectedGame, setSelectedGame] = useState<GameId | null>(null);
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const[questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
-  const [finalScore, setFinalScore] = useState(0);
+  const[finalScore, setFinalScore] = useState(0);
   const [finalTotal, setFinalTotal] = useState(0);
   const [finalXp, setFinalXp] = useState(0);
 
@@ -189,7 +189,7 @@ export default function QuestPage() {
     setFinalTotal(total);
     setFinalXp(xp);
     if (score === total) {
-      confetti({ particleCount: 150, spread: 70, colors: ['#F04E36', '#D4AF37', '#FFFFFF'] });
+      confetti({ particleCount: 150, spread: 70, colors:['#F04E36', '#D4AF37', '#FFFFFF'] });
     }
     setIsFinished(true);
   };
@@ -322,6 +322,7 @@ export default function QuestPage() {
   }
 
   // ── Active Games ─────────────────────────────────────────────────────────
+  // INI BAGIAN YANG AKU REVISI (Dari onComplete -> onWin, onBack -> onExit)
   return (
     <div className="max-w-4xl mx-auto">
       {selectedGame === 'guess' && questions.length > 0 && (
@@ -335,16 +336,13 @@ export default function QuestPage() {
       {selectedGame === 'memory' && provinceId && (
         <MemoryMatch
           provinceId={provinceId}
-          onComplete={(score, total, _time) => finishGame(score, total, 30)}
-          onBack={() => setSelectedGame(null)}
+          onWin={() => finishGame(10, 10, 30)}
+          onExit={() => setSelectedGame(null)}
         />
       )}
 
       {selectedGame === 'puzzle' && (
-        <ProvincePuzzle
-          onComplete={(score, total, _time) => finishGame(score, total, 25)}
-          onBack={() => setSelectedGame(null)}
-        />
+        <ProvincePuzzle provinceId={provinceId || ''} onExit={resetGame} onWin={() => finishGame(4, 4, 25)} />
       )}
     </div>
   );

@@ -37,7 +37,6 @@ export const chatWithGuide = async (
   }
 };
 
-// Alias untuk FloatingChat
 export const chatWithGuideFallback = chatWithGuide;
 
 // ─── Quiz Generator ───────────────────────────────────────────────────────────
@@ -55,14 +54,13 @@ export const generateQuiz = async (
   difficulty: 'easy' | 'medium' | 'hard' = 'easy'
 ): Promise<QuizQuestion[]> => {
   try {
-    // Pakai chats.create() — IDENTIK dengan pola FloatingChat yang bekerja
     const chat = ai.chats.create({
       model: 'gemini-3-flash-preview',
       config: {
         systemInstruction:
           'Kamu adalah pembuat soal kuis budaya Indonesia. Kamu HANYA membalas dengan JSON murni, tanpa penjelasan, tanpa markdown, tanpa backtick.',
       },
-      history: [],
+      history:[],
     });
 
     const prompt = `Buat ${count} soal pilihan ganda tentang budaya, sejarah, makanan, atau pakaian adat dari ${provinceName}.
@@ -73,7 +71,6 @@ Balas HANYA dengan JSON array, tidak ada teks lain. Format:
     const response = await chat.sendMessage({ message: prompt });
     const text = response.text ?? '';
 
-    // Bersihkan markdown jika ada
     const cleaned = text.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleaned) as QuizQuestion[];
 
@@ -81,10 +78,10 @@ Balas HANYA dengan JSON array, tidak ada teks lain. Format:
     return parsed;
   } catch (error) {
     console.error('Quiz generation error:', error);
-    return [
+    return[
       {
         question: `Apa tarian tradisional yang terkenal dari ${provinceName}?`,
-        options: ['Tari Kecak', 'Tari Saman', 'Tari Piring', 'Tari Reog'],
+        options:['Tari Kecak', 'Tari Saman', 'Tari Piring', 'Tari Reog'],
         correctIndex: 1,
         explanation: 'AI gagal merespons. Pastikan VITE_GEMINI_API_KEY sudah benar di .env.local dan coba refresh halaman.',
         category: 'culture',
@@ -104,7 +101,7 @@ export const generateStory = async (
       config: {
         systemInstruction: 'Kamu adalah penulis cerita petualangan budaya Indonesia yang kreatif.',
       },
-      history: [],
+      history:[],
     });
 
     const response = await chat.sendMessage({
@@ -115,5 +112,84 @@ export const generateStory = async (
   } catch (error) {
     console.error('Story generation error:', error);
     return `Petualanganmu di ${provinceName} dimulai! Sayangnya panduan cerita sedang beristirahat. Coba lagi nanti.`;
+  }
+};
+
+// ─── Memory Match Generator ───────────────────────────────────────────────────
+export interface MemoryPair {
+  term: string;
+  hint: string;
+}
+
+export const generateMemoryMatchData = async (provinceName: string): Promise<MemoryPair[]> => {
+  try {
+    const chat = ai.chats.create({
+      model: 'gemini-3-flash-preview',
+      config: {
+        systemInstruction: 'Kamu adalah ahli budaya Indonesia. Balas HANYA dengan JSON array murni tanpa penjelasan tambahan.',
+      },
+      history:[],
+    });
+
+    // PROMPT DIPERBAIKI BIAR AI KASIH DATA ASLI YANG SPESIFIK
+    const prompt = `Berikan 4 pasang budaya asli yang SANGAT SPESIFIK (bukan nama generik) dari provinsi ${provinceName}. 
+Gunakan nama asli daerah tersebut (Contoh: "Tari Pendet", "Ayam Betutu", "Pura Besakih").
+Balas WAJIB dalam format JSON array murni. Format:[
+  {"term": "Nama Budaya Asli", "hint": "Deskripsi singkat"}
+]`;
+
+    const response = await chat.sendMessage({ message: prompt });
+    let text = response.text ?? '';
+    
+    // Pembersihan JSON yang lebih kuat
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    return JSON.parse(text) as MemoryPair[];
+  } catch (error) {
+    console.error('Memory match data error (AI Limit/Error):', error);
+    // Data cadangan jika AI limit/error
+    const name = provinceName || 'Nusantara';
+    return[
+      { term: `Tarian Khas ${name}`, hint: `Seni tari tradisional dari ${name}` },
+      { term: `Kuliner ${name}`, hint: `Makanan khas dari ${name}` },
+      { term: `Pusaka ${name}`, hint: `Senjata tradisional dari ${name}` },
+      { term: `Adat ${name}`, hint: `Tradisi asli dari ${name}` }
+    ];
+  }
+};
+
+// ─── Province Puzzle Generator ────────────────────────────────────────────────
+export interface PuzzlePiece {
+  id: string;
+  name: string;
+  description: string;
+}
+
+export const generatePuzzleData = async (provinceName: string): Promise<PuzzlePiece[]> => {
+  try {
+    const chat = ai.chats.create({
+      model: 'gemini-3-flash-preview',
+      config: {
+        systemInstruction: 'Kamu adalah pembuat data puzzle provinsi Indonesia. Balas HANYA dengan JSON array murni.',
+      },
+      history:[],
+    });
+
+    const prompt = `Buat 3 bagian/wilayah/ikon penting dari provinsi ${provinceName} yang bisa dijadikan kepingan puzzle.
+    Balas HANYA dengan JSON array:[{"id": "bagian1", "name": "...", "description": "..."}, ...]`;
+
+    const response = await chat.sendMessage({ message: prompt });
+    const text = response.text ?? '';
+    const cleaned = text.replace(/```json|```/g, '').trim();
+    return JSON.parse(cleaned) as PuzzlePiece[];
+  } catch (error) {
+    console.error('Puzzle data error:', error);
+    // REVISI FALLBACK
+    const name = provinceName || 'Nusantara';
+    return[
+      { id: "p1", name: `Ikon ${name}`, description: `Bagian tengah ${name}` },
+      { id: "p2", name: `Wilayah Adat`, description: `Bagian utara ${name}` },
+      { id: "p3", name: `Situs Sejarah`, description: `Bagian selatan ${name}` }
+    ];
   }
 };

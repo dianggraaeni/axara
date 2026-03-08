@@ -1,7 +1,7 @@
 // src/pages/Profile.tsx
 // Diupdate: data dari backend API, update profil dan avatar lewat API.
 
-import { useState } from 'react';
+import { useState, ChangeEvent, ReactNode } from 'react';
 import { Award, Star, MapPin, Shield, Edit2, Check, Loader2, LogOut, TrendingUp } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuth } from '../context/AuthContext';
@@ -15,8 +15,8 @@ export default function ProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(user?.username ?? '');
-  const [editGender, setEditGender] = useState<'male' | 'female'>(user?.gender ?? 'male');
-  const [isSaving, setIsSaving] = useState(false);
+  const[editGender, setEditGender] = useState<'male' | 'female'>(user?.gender ?? 'male');
+  const[isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
 
   const handleSave = async () => {
@@ -34,7 +34,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
@@ -159,7 +159,7 @@ export default function ProfilePage() {
           </div>
         ) : (
           <div className="flex items-center gap-6">
-            <div className="w-24 h-24 bg-cream border-4 border-primary/20 rounded-3xl overflow-hidden flex-shrink-0">
+            <div className="w-24 h-24 bg-cream border-4 border-primary/20 rounded-3xl overflow-hidden shrink-0">
               {avatarUrl ? (
                 <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
               ) : (
@@ -254,7 +254,7 @@ export default function ProfilePage() {
   );
 }
 
-function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: any; color: string }) {
+function StatCard({ icon, label, value, color }: { icon: ReactNode; label: string; value: any; color: string }) {
   return (
     <div className="bg-white border-2 border-cream-dark rounded-2xl p-4 flex flex-col items-center justify-center text-center">
       <div className={`${color} mb-2`}>{icon}</div>

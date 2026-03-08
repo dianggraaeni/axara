@@ -64,7 +64,7 @@ export default function MapPage() {
       </header>
 
       {/* Map Visualization */}
-      <div className="relative w-full aspect-[4/3] md:aspect-[16/9] bg-cream rounded-3xl border-4 border-cream-dark overflow-hidden">
+      <div className="relative w-full aspect-4/3 md:aspect-video bg-cream rounded-3xl border-4 border-cream-dark overflow-hidden">
         <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#F04E36 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
 
         {provinces.map((prov: any) => {
