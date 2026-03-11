@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { X, Send, Bot, User } from 'lucide-react';
-import { chatWithGuide } from '../services/gemini';
+import { motion, AnimatePresence } from 'framer-motion';
+// REVISI 1: Tambahkan MessageCircle di daftar import
+import { X, Send, Bot, User, MessageCircle } from 'lucide-react';
+import { chatWithGuide } from '../services/ai.service'; // Pastikan path ini benar sesuai strukturmu
 
 interface Message {
   id: string;
@@ -30,7 +31,7 @@ export default function FloatingChat() {
     if (isOpen) {
       scrollToBottom();
     }
-  }, [messages, isOpen]);
+  },[messages, isOpen]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -70,8 +71,9 @@ export default function FloatingChat() {
             {/* Header */}
             <div className="bg-primary p-4 flex items-center justify-between text-white">
               <div className="flex items-center gap-3">
+                {/* REVISI 2: Ganti <img> pecah di header dengan Icon Bot */}
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm text-2xl overflow-hidden shrink-0">
-                  <img src="/axarabot.png" alt="AxaraBot" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <Bot size={24} className="text-white" />
                 </div>
                 <div>
                   <h2 className="font-bold text-lg leading-tight">AxaraBot</h2>
@@ -146,7 +148,8 @@ export default function FloatingChat() {
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 w-16 h-16 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center z-50 border-4 border-white overflow-hidden"
       >
-        {isOpen ? <X size={28} /> : <img src="/axarabot.png" alt="AxaraBot" className="w-full h-full object-cover" referrerPolicy="no-referrer" />}
+        {/* REVISI 3: Ganti <img> pecah dengan Icon MessageCircle */}
+        {isOpen ? <X size={28} /> : <MessageCircle size={28} className="text-white" />}
       </motion.button>
     </>
   );
