@@ -11,7 +11,7 @@ import { useUserStats } from '../hooks/useBackendData';
 const navItems = [
   { path: '/app', label: 'AxaraWorld', icon: Map },
   { path: '/app/quest', label: 'AxaraBattle', icon: Swords },
-  { path: '/app/chat', label: 'AxaraVerse', icon: MessageCircle },
+  { path: '/app/verse', label: 'AxaraVerse', icon: MessageCircle },
   { path: '/app/profile', label: 'AxaraBadge', icon: User },
 ];
 
