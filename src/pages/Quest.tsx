@@ -6,9 +6,9 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { generateQuiz } from '../services/ai.service';
-import { Loader2, X, Check, Award, Brain, Image as ImageIcon, Puzzle } from 'lucide-react';
+import { Loader2, X, Check, Award, Brain, Image as ImageIcon, Sparkles } from 'lucide-react';
 import MemoryMatch from '../components/games/MemoryMatch';
-import ProvincePuzzle from '../components/games/ProvincePuzzle';
+import CultureSwipe from '../components/games/CultureSwipe';
 import BadgeUnlockModal from '../components/BadgeUnlockModal';
 
 // Tipe lokal
@@ -20,7 +20,7 @@ interface QuizQuestion {
   category?: string;
 }
 
-type GameId = 'guess' | 'memory' | 'puzzle';
+type GameId = 'guess' | 'memory' | 'swipe';
 
 // Peta nama provinsi untuk prompt AI yang lebih akurat
 const PROVINCE_NAMES: Record<string, string> = {
@@ -29,6 +29,11 @@ const PROVINCE_NAMES: Record<string, string> = {
   'sumatera-barat': 'Sumatera Barat',
   'sulawesi-selatan': 'Sulawesi Selatan',
   'papua': 'Papua',
+  'dki-jakarta': 'DKI Jakarta',
+  'jawa-barat': 'Jawa Barat',
+  'jawa-timur': 'Jawa Timur',
+  'kalimantan-timur': 'Kalimantan Timur',
+  'sulawesi-utara': 'Sulawesi Utara',
 };
 
 // ─── Guess The Culture Game ───────────────────────────────────────────────────
@@ -42,10 +47,10 @@ function GuessCultureGame({
   onBack: () => void;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const[selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
+  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
-  const[score, setScore] = useState(0);
+  const [score, setScore] = useState(0);
 
   const question = questions[currentIndex];
 
@@ -164,13 +169,13 @@ export default function QuestPage() {
 
   const [selectedGame, setSelectedGame] = useState<GameId | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const[loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   
   // State untuk Data Akhir
   const [finalScore, setFinalScore] = useState(0);
   const [finalTotal, setFinalTotal] = useState(0);
-  const[finalXp, setFinalXp] = useState(0);
+  const [finalXp, setFinalXp] = useState(0);
   
   // STATE BARU: Menyimpan daftar game apa saja yang sudah diselesaikan
   const [completedGames, setCompletedGames] = useState<string[]>([]);
@@ -211,15 +216,15 @@ export default function QuestPage() {
           setShowBadge(true);
         } else {
           // Kalau belum 3, ledakkan confetti biasa aja sbg hadiah mini
-          if (score === total) confetti({ particleCount: 100, spread: 70, colors:['#F04E36', '#D4AF37', '#FFFFFF'] });
+          if (score === total) confetti({ particleCount: 100, spread: 70, colors: ['#F04E36', '#D4AF37', '#FFFFFF'] });
         }
       } else {
         // Jika game ini sudah pernah dimainkan sebelumnya, kasih confetti aja
-        if (score === total) confetti({ particleCount: 100, spread: 70, colors:['#F04E36', '#D4AF37', '#FFFFFF'] });
+        if (score === total) confetti({ particleCount: 100, spread: 70, colors: ['#F04E36', '#D4AF37', '#FFFFFF'] });
       }
     } else {
       // Logic fallback
-      if (score === total) confetti({ particleCount: 100, spread: 70, colors:['#F04E36', '#D4AF37', '#FFFFFF'] });
+      if (score === total) confetti({ particleCount: 100, spread: 70, colors: ['#F04E36', '#D4AF37', '#FFFFFF'] });
     }
     
     setIsFinished(true);
@@ -239,7 +244,7 @@ export default function QuestPage() {
     // Mengecek status tiap game untuk mengubah tampilan tombol
     const isGuessDone = completedGames.includes('guess');
     const isMemoryDone = completedGames.includes('memory');
-    const isPuzzleDone = completedGames.includes('puzzle');
+    const isSwipeDone = completedGames.includes('swipe');
 
     return (
       <div className="max-w-4xl mx-auto space-y-8">
@@ -263,7 +268,8 @@ export default function QuestPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Guess The Culture */}
           <motion.button
-            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.02 }} 
+            whileTap={{ scale: 0.98 }}
             onClick={startGuessCulture}
             disabled={!provinceId}
             className={`border-2 rounded-3xl p-6 text-left transition-all group disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -289,7 +295,8 @@ export default function QuestPage() {
 
           {/* Memory Match */}
           <motion.button
-            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            whileHover={{ scale: 1.02 }} 
+            whileTap={{ scale: 0.98 }}
             onClick={() => provinceId && setSelectedGame('memory')}
             disabled={!provinceId}
             className={`border-2 rounded-3xl p-6 text-left transition-all group disabled:opacity-50 disabled:cursor-not-allowed ${
@@ -313,28 +320,29 @@ export default function QuestPage() {
             </div>
           </motion.button>
 
-          {/* Province Puzzle */}
+          {/* Culture Swipe (BARU!) */}
           <motion.button
-            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-            onClick={() => setSelectedGame('puzzle')}
+            whileHover={{ scale: 1.02 }} 
+            whileTap={{ scale: 0.98 }}
+            onClick={() => provinceId && setSelectedGame('swipe')}
             disabled={!provinceId}
             className={`border-2 rounded-3xl p-6 text-left transition-all group disabled:opacity-50 disabled:cursor-not-allowed ${
-              isPuzzleDone ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200 hover:border-[#10B981]'
+              isSwipeDone ? 'bg-green-50 border-green-200' : 'bg-white border-gray-200 hover:border-[#8B5CF6]'
             }`}
           >
             <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 transition-colors ${
-              isPuzzleDone ? 'bg-green-500 text-white' : 'bg-green-50 text-[#10B981] group-hover:bg-[#10B981] group-hover:text-white'
+              isSwipeDone ? 'bg-green-500 text-white' : 'bg-purple-50 text-[#8B5CF6] group-hover:bg-[#8B5CF6] group-hover:text-white'
             }`}>
-              <Puzzle size={32} />
+              <Sparkles size={32} />
             </div>
-            <h3 className="text-xl font-bold text-[#0a0a0a] mb-2">Province Puzzle</h3>
-            <p className="text-gray-500 font-medium text-sm">Susun kepingan acak untuk membentuk peta wilayah yang utuh.</p>
+            <h3 className="text-xl font-bold text-[#0a0a0a] mb-2">Culture Swipe</h3>
+            <p className="text-gray-500 font-medium text-sm">Swipe kartu budaya: Mitos atau Fakta? Kayak Quizizz tapi lebih asik!</p>
             <div className="mt-4 flex gap-2">
-              <span className="text-xs font-bold px-2 py-1 bg-red-50 text-primary rounded-full">+25 XP/provinsi</span>
-              {isPuzzleDone ? (
+              <span className="text-xs font-bold px-2 py-1 bg-red-50 text-primary rounded-full">+20 XP/card</span>
+              {isSwipeDone ? (
                 <span className="text-xs font-bold px-2 py-1 bg-green-500 text-white rounded-full">✅ Selesai</span>
               ) : (
-                <span className="text-xs font-bold px-2 py-1 bg-green-100 text-green-700 rounded-full">🟢 Live</span>
+                <span className="text-xs font-bold px-2 py-1 bg-purple-100 text-purple-700 rounded-full">🔥 NEW!</span>
               )}
             </div>
           </motion.button>
@@ -420,8 +428,12 @@ export default function QuestPage() {
         />
       )}
 
-      {selectedGame === 'puzzle' && (
-        <ProvincePuzzle provinceId={provinceId || ''} onExit={resetGame} onWin={() => finishGame(4, 4, 25)} />
+      {selectedGame === 'swipe' && provinceId && (
+        <CultureSwipe
+          provinceId={provinceId}
+          onWin={(score, total) => finishGame(score, total, 20)}
+          onExit={() => setSelectedGame(null)}
+        />
       )}
     </div>
   );
