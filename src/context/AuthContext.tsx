@@ -1,6 +1,10 @@
 // src/context/AuthContext.tsx
-// Context untuk menyimpan state autentikasi user.
-// Menggantikan bagian profile di useAppStore lama.
+// FIX Bug 4: Session persist saat refresh browser.
+// Perubahan dari kode asli:
+// - useState diinisialisasi langsung dari authService.getCachedUser() (sudah ada di auth.service.ts)
+// - restoreSession() tetap berjalan di background untuk refresh access token
+// - Timeout 5 detik: jika backend tidak merespons, tetap pakai cached user (tidak paksa logout)
+// - Hanya logout jika refresh token benar-benar invalid (restoreSession() throw error)
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService, AuthUser } from '../services/auth.service';
@@ -18,35 +22,42 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // FIX: Inisialisasi langsung dari localStorage via getCachedUser()
+  // sehingga user tidak null saat halaman pertama kali dimuat
+  const [user, setUser] = useState<AuthUser | null>(() => authService.getCachedUser());
+  
+  // FIX: isLoading hanya true jika ada refresh token yang perlu divalidasi
+  // Jika tidak ada token sama sekali, langsung false tanpa hit API
+  const [isLoading, setIsLoading] = useState<boolean>(() => {
+    return !!localStorage.getItem('axara_refresh');
+  });
 
   useEffect(() => {
-    // Cek dulu apakah ada refresh token di localStorage.
-    // Kalau tidak ada, langsung set isLoading = false tanpa hit API.
+    // Tidak ada refresh token → tidak perlu hit API sama sekali
     const hasRefreshToken = !!localStorage.getItem('axara_refresh');
     if (!hasRefreshToken) {
       setIsLoading(false);
       return;
     }
 
-    // Ada token, coba restore session dengan timeout 5 detik
+    // FIX: Timeout 5 detik — jika backend tidak merespons,
+    // tetap pakai cached user (tidak paksa logout)
     const timeout = setTimeout(() => {
-      // Jika backend tidak merespons dalam 5 detik, anggap tidak login
-      console.warn('Session restore timeout — backend mungkin belum jalan');
-      localStorage.removeItem('axara_refresh');
-      localStorage.removeItem('axara_user');
+      console.warn('Session restore timeout — menggunakan cached user');
+      // Tidak hapus localStorage, tidak logout — pakai cached user
       setIsLoading(false);
     }, 5000);
 
     authService.restoreSession()
       .then((u) => {
         clearTimeout(timeout);
-        setUser(u);
+        if (u) setUser(u);
+        // Jika u null tapi tidak throw, berarti tidak ada sesi — tetap pakai cached
       })
       .catch(() => {
         clearTimeout(timeout);
-        // restoreSession sudah bersihkan localStorage di dalamnya
+        // restoreSession throw = refresh token invalid → logout paksa
+        setUser(null);
       })
       .finally(() => {
         clearTimeout(timeout);

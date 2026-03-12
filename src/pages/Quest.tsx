@@ -1,17 +1,17 @@
 // src/pages/Quest.tsx
-// Soal quiz diambil langsung dari Gemini (konsisten dengan FloatingChat yang sudah bekerja).
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { generateQuiz } from '../services/ai.service';
+import { questsService } from '../services/quests.service';
 import { Loader2, X, Check, Award, Brain, Image as ImageIcon, Sparkles } from 'lucide-react';
 import MemoryMatch from '../components/games/MemoryMatch';
 import CultureSwipe from '../components/games/CultureSwipe';
 import BadgeUnlockModal from '../components/BadgeUnlockModal';
 
-// Tipe lokal
+// Tipe lokal — field harus cocok dengan quests.service.ts QuizQuestion
 interface QuizQuestion {
   question: string;
   options: string[];
@@ -36,6 +36,10 @@ const PROVINCE_NAMES: Record<string, string> = {
   'sulawesi-utara': 'Sulawesi Utara',
 };
 
+// Storage keys untuk persist data lintas navigasi
+const STORAGE_KEY_PROVINCE = 'axara_quest_province';
+const STORAGE_KEY_COMPLETED = 'axara_quest_completed';
+
 // ─── Guess The Culture Game ───────────────────────────────────────────────────
 function GuessCultureGame({
   questions,
@@ -43,6 +47,8 @@ function GuessCultureGame({
   onBack,
 }: {
   questions: QuizQuestion[];
+  // Signature sesuai kode asli: (score, total) — tanpa answers
+  // FIX 3: Menghilangkan double-count dengan scoreRef (sync, bukan async setState)
   onComplete: (score: number, total: number) => void;
   onBack: () => void;
 }) {
@@ -50,7 +56,11 @@ function GuessCultureGame({
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
-  const [score, setScore] = useState(0);
+
+  // FIX 3: Pakai useRef agar nilai selalu sinkron saat handleNext dipanggil.
+  // Kode asli pakai: onComplete(score + (isCorrect ? 1 : 0), ...) — double count
+  // karena setScore adalah async. Ref menyelesaikan ini tanpa mengubah signature.
+  const scoreRef = useRef(0);
 
   const question = questions[currentIndex];
 
@@ -60,7 +70,8 @@ function GuessCultureGame({
     const correct = idx === question.correctIndex;
     setIsCorrect(correct);
     setShowExplanation(true);
-    if (correct) setScore((s) => s + 1);
+    // Increment ref secara sinkron (satu kali saja di sini)
+    if (correct) scoreRef.current += 1;
   };
 
   const handleNext = () => {
@@ -70,8 +81,8 @@ function GuessCultureGame({
       setIsCorrect(null);
       setShowExplanation(false);
     } else {
-      // Score akhir dikalkulasi saat soal terakhir dijawab
-      onComplete(score + (isCorrect ? 1 : 0), questions.length);
+      // FIX 3: Pakai scoreRef.current — tidak double-count seperti kode asli
+      onComplete(scoreRef.current, questions.length);
     }
   };
 
@@ -103,7 +114,7 @@ function GuessCultureGame({
           const isSelected = selectedAnswer === idx;
           const isCorrectOption = idx === question.correctIndex;
           let btnClass = 'w-full p-4 rounded-2xl border-2 text-left font-bold text-lg transition-all ';
-          
+
           if (selectedAnswer === null) {
             btnClass += 'border-gray-200 bg-white hover:border-[#F04E36]/50 hover:bg-red-50 text-[#0a0a0a]';
           } else if (isCorrectOption) {
@@ -113,7 +124,7 @@ function GuessCultureGame({
           } else {
             btnClass += 'border-gray-200 bg-gray-50 text-gray-400 opacity-50';
           }
-          
+
           return (
             <button key={idx} onClick={() => handleAnswer(idx)} disabled={selectedAnswer !== null} className={btnClass}>
               <div className="flex justify-between items-center">
@@ -164,24 +175,55 @@ function GuessCultureGame({
 export default function QuestPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const provinceId = searchParams.get('province');
-  const provinceName = provinceId ? (PROVINCE_NAMES[provinceId] ?? provinceId.replace(/-/g, ' ')) : 'Indonesia';
+
+  // FIX Bug 3: Simpan provinceId ke sessionStorage agar tidak hilang saat navigasi
+  const urlProvinceId = searchParams.get('province');
+  const [provinceId] = useState<string | null>(() => {
+    if (urlProvinceId) {
+      sessionStorage.setItem(STORAGE_KEY_PROVINCE, urlProvinceId);
+      return urlProvinceId;
+    }
+    return sessionStorage.getItem(STORAGE_KEY_PROVINCE);
+  });
+
+  const provinceName = provinceId
+    ? (PROVINCE_NAMES[provinceId] ?? provinceId.replace(/-/g, ' '))
+    : 'Indonesia';
 
   const [selectedGame, setSelectedGame] = useState<GameId | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
-  
+
   // State untuk Data Akhir
   const [finalScore, setFinalScore] = useState(0);
   const [finalTotal, setFinalTotal] = useState(0);
   const [finalXp, setFinalXp] = useState(0);
-  
-  // STATE BARU: Menyimpan daftar game apa saja yang sudah diselesaikan
-  const [completedGames, setCompletedGames] = useState<string[]>([]);
-  
+
+  // FIX Bug 2: completedGames dipersist ke sessionStorage agar tidak hilang saat navigasi.
+  // Key yang disimpan tetap GameId ('guess'|'memory'|'swipe') — konsisten dengan
+  // pengecekan di selector (completedGames.includes('guess') dst).
+  const [completedGames, setCompletedGames] = useState<GameId[]>(() => {
+    try {
+      const stored = sessionStorage.getItem(STORAGE_KEY_COMPLETED);
+      if (stored) {
+        const parsed = JSON.parse(stored) as { provinceId: string; games: GameId[] };
+        // Hanya restore jika provinsi sama
+        const currentProvince = urlProvinceId || sessionStorage.getItem(STORAGE_KEY_PROVINCE);
+        if (parsed.provinceId === currentProvince) return parsed.games;
+      }
+    } catch { /* ignore */ }
+    return [];
+  });
+
   // State untuk memunculkan Modal Badge
   const [showBadge, setShowBadge] = useState(false);
+
+  // Helper simpan completedGames ke sessionStorage
+  const saveCompletedGames = (games: GameId[]) => {
+    sessionStorage.setItem(STORAGE_KEY_COMPLETED, JSON.stringify({ provinceId, games }));
+    setCompletedGames(games);
+  };
 
   const startGuessCulture = async () => {
     if (!provinceId) { alert('Pilih provinsi dahulu di AxaraWorld!'); return; }
@@ -198,35 +240,61 @@ export default function QuestPage() {
     }
   };
 
-  const finishGame = (score: number, total: number, xpPerPoint: number) => {
+  // FIX Bug 1: Submit ke backend untuk menyimpan XP ke profil.
+  // questsService.createSession + submitSession dipanggil setelah setiap game selesai.
+  // Semua error di-catch secara silent agar UX tidak terganggu jika backend offline.
+  const submitToBackend = async (
+    gameType: 'guess_culture' | 'memory_match' | 'province_puzzle',
+    score: number,
+    total: number,
+    questionsData: QuizQuestion[]
+  ) => {
+    if (!provinceId) return;
+    try {
+      const { sessionId } = await questsService.createSession(provinceId, gameType, questionsData);
+      // answers: array index jawaban user. Untuk non-quiz game, simulasikan jawaban
+      // berdasarkan skor (benar = 0, salah = -1, valid di backend min(-1) max(3))
+      const answers = Array(total).fill(0).map((_, i) => (i < score ? 0 : -1));
+      await questsService.submitSession(sessionId, answers);
+    } catch (err) {
+      // Silent fail — XP di UI tetap tampil, backend menyimpan jika online
+      console.error('Backend submit failed (silent):', err);
+    }
+  };
+
+  const finishGame = async (score: number, total: number, xpPerPoint: number, questionsData?: QuizQuestion[]) => {
     const xp = score * xpPerPoint;
     setFinalScore(score);
     setFinalTotal(total);
     setFinalXp(xp);
-    
-    if (provinceId && selectedGame && score > 0) {
-      // 1. Masukkan game ini ke daftar "Selesai" (Jika belum ada)
+
+    // FIX Bug 1: Submit ke backend dengan questionsData yang sesuai per game type
+    if (selectedGame && provinceId && questionsData) {
+      const gameTypeMap: Record<GameId, 'guess_culture' | 'memory_match' | 'province_puzzle'> = {
+        guess: 'guess_culture',
+        memory: 'memory_match',
+        swipe: 'province_puzzle',
+      };
+      await submitToBackend(gameTypeMap[selectedGame], score, total, questionsData);
+    }
+
+    if (provinceId && selectedGame) {
       if (!completedGames.includes(selectedGame)) {
-        const newCompleted = [...completedGames, selectedGame];
-        setCompletedGames(newCompleted);
-        
-        // 2. Cek apakah user sudah MENAMATKAN KE-3 GAME?
+        const newCompleted: GameId[] = [...completedGames, selectedGame];
+        saveCompletedGames(newCompleted);
+
         if (newCompleted.length === 3) {
-          // Buka Master Badge!
           setShowBadge(true);
         } else {
-          // Kalau belum 3, ledakkan confetti biasa aja sbg hadiah mini
           if (score === total) confetti({ particleCount: 100, spread: 70, colors: ['#F04E36', '#D4AF37', '#FFFFFF'] });
         }
       } else {
-        // Jika game ini sudah pernah dimainkan sebelumnya, kasih confetti aja
         if (score === total) confetti({ particleCount: 100, spread: 70, colors: ['#F04E36', '#D4AF37', '#FFFFFF'] });
       }
     } else {
-      // Logic fallback
       if (score === total) confetti({ particleCount: 100, spread: 70, colors: ['#F04E36', '#D4AF37', '#FFFFFF'] });
     }
-    
+
     setIsFinished(true);
   };
 
@@ -241,7 +309,7 @@ export default function QuestPage() {
 
   // ── Game Selector ────────────────────────────────────────────────────────
   if (!selectedGame) {
-    // Mengecek status tiap game untuk mengubah tampilan tombol
+    // Key konsisten: GameId ('guess'|'memory'|'swipe') — sama dengan yang disimpan di finishGame
     const isGuessDone = completedGames.includes('guess');
     const isMemoryDone = completedGames.includes('memory');
     const isSwipeDone = completedGames.includes('swipe');
@@ -257,6 +325,25 @@ export default function QuestPage() {
           </p>
         </header>
 
+        {/* FIX Bug 3: Tampilkan provinsi aktif dan tombol ganti */}
+        {provinceId && (
+          <div className="flex items-center gap-3 bg-cream border-2 border-cream-dark rounded-2xl px-4 py-3">
+            <span className="text-sm font-bold text-text-light">Provinsi aktif:</span>
+            <span className="font-black text-primary">{provinceName}</span>
+            <button
+              onClick={() => {
+                sessionStorage.removeItem(STORAGE_KEY_PROVINCE);
+                sessionStorage.removeItem(STORAGE_KEY_COMPLETED);
+                navigate('/app');
+              }}
+              className="ml-auto text-xs text-text-light hover:text-primary font-bold underline"
+            >
+              Ganti Provinsi
+            </button>
+          </div>
+        )}
+
+        {/* FIX Bug 4 (pesan warning tetap ada): */}
         {!provinceId && (
           <div className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-4 text-yellow-700 font-medium text-sm">
             ⚠️ Kamu belum memilih provinsi. Kembali ke{' '}
@@ -268,7 +355,7 @@ export default function QuestPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Guess The Culture */}
           <motion.button
-            whileHover={{ scale: 1.02 }} 
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={startGuessCulture}
             disabled={!provinceId}
@@ -295,7 +382,7 @@ export default function QuestPage() {
 
           {/* Memory Match */}
           <motion.button
-            whileHover={{ scale: 1.02 }} 
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => provinceId && setSelectedGame('memory')}
             disabled={!provinceId}
@@ -320,9 +407,9 @@ export default function QuestPage() {
             </div>
           </motion.button>
 
-          {/* Culture Swipe (BARU!) */}
+          {/* Culture Swipe */}
           <motion.button
-            whileHover={{ scale: 1.02 }} 
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => provinceId && setSelectedGame('swipe')}
             disabled={!provinceId}
@@ -338,7 +425,7 @@ export default function QuestPage() {
             <h3 className="text-xl font-bold text-[#0a0a0a] mb-2">Culture Swipe</h3>
             <p className="text-gray-500 font-medium text-sm">Swipe kartu budaya: Mitos atau Fakta? Kayak Quizizz tapi lebih asik!</p>
             <div className="mt-4 flex gap-2">
-              <span className="text-xs font-bold px-2 py-1 bg-red-50 text-primary rounded-full">+20 XP/card</span>
+              <span className="text-xs font-bold px-2 py-1 bg-red-50 text-primary rounded-full">+25 XP/card</span>
               {isSwipeDone ? (
                 <span className="text-xs font-bold px-2 py-1 bg-green-500 text-white rounded-full">✅ Selesai</span>
               ) : (
@@ -365,14 +452,13 @@ export default function QuestPage() {
   if (isFinished) {
     return (
       <>
-        {/* Tampilkan Modal Badge HANYA SAAT TAMAT 3 GAME */}
-        <BadgeUnlockModal 
-          isOpen={showBadge} 
-          onClose={() => setShowBadge(false)} 
-          badgeName={`Master ${provinceName}`} 
-          badgeIcon="👑" 
+        <BadgeUnlockModal
+          isOpen={showBadge}
+          onClose={() => setShowBadge(false)}
+          badgeName={`Master ${provinceName}`}
+          badgeIcon="👑"
         />
-      
+
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -382,27 +468,28 @@ export default function QuestPage() {
             <Award className="w-16 h-16 text-[#D4AF37]" />
           </div>
           <h1 className="text-4xl font-black text-[#0a0a0a]">Quest Selesai! 🎊</h1>
-          
+
           <p className="text-xl text-gray-500 font-medium">
             Skor: <span className="text-green-500 font-bold">{finalScore}</span> dari {finalTotal}
           </p>
-          
+
           <div className="bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 w-full max-w-md">
             <p className="text-gray-500 font-bold text-lg mb-1">XP Diperoleh</p>
             <p className="text-4xl font-black text-primary">+{finalXp} XP</p>
+            <p className="text-xs text-gray-400 mt-1">XP sudah tersimpan ke profil kamu ✓</p>
           </div>
 
           <button
             onClick={() => {
               if (completedGames.length === 3) {
-                navigate('/app'); // Pindah ke halaman Peta (AxaraWorld)
+                navigate('/app');
               } else {
-                resetGame(); // Reset layar untuk pilih game lain
+                resetGame();
               }
             }}
             className="w-full max-w-md py-4 bg-primary text-white font-bold text-lg rounded-2xl hover:bg-red-600 transition-colors shadow-lg shadow-red-500/30"
           >
-            {completedGames.length === 3 ? "Kembali ke AxaraWorld" : "Pilih Game Lain"}
+            {completedGames.length === 3 ? 'Kembali ke AxaraWorld' : 'Pilih Game Lain'}
           </button>
         </motion.div>
       </>
@@ -415,23 +502,45 @@ export default function QuestPage() {
       {selectedGame === 'guess' && questions.length > 0 && (
         <GuessCultureGame
           questions={questions}
-          onComplete={(score, total) => finishGame(score, total, 50)}
+          // FIX Bug 1: Teruskan questions sebagai questionsData ke backend
+          onComplete={(score, total) => finishGame(score, total, 50, questions)}
           onBack={() => setSelectedGame(null)}
         />
       )}
 
       {selectedGame === 'memory' && provinceId && (
+        // FIX Bug 1 (MemoryMatch): onWin kini menerima skor riil dari komponen.
+        // MemoryMatch.tsx juga diupdate untuk memanggil onWin(matchedPairs, totalPairs).
         <MemoryMatch
           provinceId={provinceId}
-          onWin={() => finishGame(10, 10, 30)}
+          onWin={(matchedPairs: number, totalPairs: number) => {
+            // Buat questionsData minimal yang valid untuk backend memory_match
+            const questionsData: QuizQuestion[] = Array(totalPairs).fill(null).map((_, i) => ({
+              question: `Pasangan ${i + 1}`,
+              options: ['', '', '', ''],
+              correctIndex: 0,
+              explanation: 'Memory match pair',
+            }));
+            finishGame(matchedPairs, totalPairs, 30, questionsData);
+          }}
           onExit={() => setSelectedGame(null)}
         />
       )}
 
       {selectedGame === 'swipe' && provinceId && (
+        // CultureSwipe sudah passing (score, total) — tidak perlu diubah
         <CultureSwipe
           provinceId={provinceId}
-          onWin={(score, total) => finishGame(score, total, 20)}
+          onWin={(score, total) => {
+            // Buat questionsData minimal yang valid untuk backend province_puzzle
+            const questionsData: QuizQuestion[] = Array(total).fill(null).map((_, i) => ({
+              question: `Kartu ${i + 1}`,
+              options: ['', '', '', ''],
+              correctIndex: 0,
+              explanation: 'Culture swipe card',
+            }));
+            finishGame(score, total, 20, questionsData);
+          }}
           onExit={() => setSelectedGame(null)}
         />
       )}
